@@ -9,37 +9,53 @@ lett_a: .ascii "A"
 lett_b: .ascii "B"
 lett_c: .ascii "C"
 lett_term: .ascii "\0"
-lett_acapo: .ascii "\n\n"
-buffer_in: .ascii ""
-var: .ascii "fine\n"
+lett_acapo: .ascii "\n"
+trattino: .ascii "-"
 
 A: .long 0
 B: .long 0
 C: .long 0
+count: .long 0
 
 .section .text # sezione istruzioni
-.global on 
+.global day 
     
-    on:
+    day:
         movl 4(%esp), %esi
+        movl 8(%esp), %edi
         movl $0, %edx
-        xorl %ecx, %ecx
-        # NON TOCCARE! METTO IN CL IL CARATTERE
-        movb (%edx, %esi, 1), %cl
-        cmp %cl, lett_a
+        xorl %ebx, %ebx
+        xorl %eax, %eax
+        on:
+        # metto in bl il carattere presente a uno spiazzamento edx di esi
+        movb (%edx, %esi, 1), %bl
 
-    #a:
-    #	movl $4, %eax
-	#    movl $0, %ebx
-	#    leal lett_a, %ecx
-	#    movl $1, %edx
-	#    int $0x80
+        cmp lett_b, %bl
+        jg c    # se carattere maggiore di b allora sarà c
+        jl a    # se carattere minore di b allora sarà a 
+
+    a:
+        inc %edx
+        xorl %ebx, %ebx
+        movb (%edx, %esi, 1), %bl
+        cmp trattino, %bl
+        je a    # bl == '-' -> torna ad a
+       
+        subb %bl, $48   # trasforma il valore di bl da carattere ascii a numero
+        cmp $0, %al
+        je second_num
+        first_num:
+        movb %bl, %al
+        mulb $10
+        movw %ax, A
+        jmp a
+        second_num:
+        addb A, %bl
+        jmp day
 
 
-    #fine:
-    #    movl $4, %eax
-	#    movl $0, %ebx
-	#    leal fine, %ecx
-	#    movl $5, %edx
-	#    int $0x80
-    #    ret
+
+    c:
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+        movb %cl, B
