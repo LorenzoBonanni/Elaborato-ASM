@@ -25,37 +25,60 @@ count: .long 0
         movl 8(%esp), %edi
         movl $0, %edx
         xorl %ebx, %ebx
-        xorl %eax, %eax
         on:
+        # se count è tre ho settato il valore iniziale di tutti i parcheggi
+        cmp $3, count
+        je normale
         # metto in bl il carattere presente a uno spiazzamento edx di esi
         movb (%edx, %esi, 1), %bl
 
         cmp lett_b, %bl
         jg c    # se carattere maggiore di b allora sarà c
         jl a    # se carattere minore di b allora sarà a 
+        je b
 
     a:
         inc %edx
-        xorl %ebx, %ebx
+        # xorb %bl, %bl
         movb (%edx, %esi, 1), %bl
         cmp trattino, %bl
         je a    # bl == '-' -> torna ad a
-       
-        subb %bl, $48   # trasforma il valore di bl da carattere ascii a numero
-        cmp $0, %al
-        je second_num
-        first_num:
-        movb %bl, %al
-        mulb $10
-        movw %ax, A
-        jmp a
-        second_num:
-        addb A, %bl
-        jmp day
 
+        cmp lett_acapo, %bl
+        subb $48, %bl   # trasforma il valore di bl da carattere ascii a numero
+        je a    # bl == '\n' -> vai a continue
+        cmp $0, %bh
+        jne continue
+        movb %bl, %bh
+        jmp a
+
+        continue:
+        movb $10, %al
+        mulb %bh    # ax = bl*10
+        # obtain the value of the parking
+        xorb %bh, %bh
+        addw %ax, %bx
+        movw %ax, A
+
+        # increase count
+        xorl %eax, %eax
+        movl count, %eax
+        inc %eax
+        movl %eax, count
+        inc %edx
+        jmp on
 
 
     c:
         inc %edx
         movb (%edx, %esi, 1), %bl
         movb %cl, B
+    
+
+    b:
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+        movb %cl, B
+    
+    normale:
+        xorl %eax, %eax
