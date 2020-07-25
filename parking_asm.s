@@ -39,32 +39,42 @@ count: .long 0
 
     a:
         inc %edx
-        # xorb %bl, %bl
         movb (%edx, %esi, 1), %bl
         cmp trattino, %bl
         je a    # bl == '-' -> torna ad a
 
         cmp lett_acapo, %bl
+        je single_number # bl == '\n' -> vai a single_number
+
         subb $48, %bl   # trasforma il valore di bl da carattere ascii a numero
-        je a    # bl == '\n' -> vai a continue
         cmp $0, %bh
         jne continue
         movb %bl, %bh
         jmp a
 
         continue:
+        # ax = bl*10
         movb $10, %al
-        mulb %bh    # ax = bl*10
-        # obtain the value of the parking
+        mulb %bh
+
+        # insert in A the number of cars if the value is composed by 2numbers
         xorb %bh, %bh
         addw %ax, %bx
         movw %ax, A
+        jmp end
 
+        # insert in A the number of cars if the value is composed by 1number
+        single_number:
+        movb %bh, A
+
+        end:
         # increase count
         xorl %eax, %eax
         movl count, %eax
         inc %eax
         movl %eax, count
+
+        #increase edx and retrurn to on
         inc %edx
         jmp on
 
