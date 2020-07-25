@@ -8,6 +8,8 @@
 lett_a: .ascii "A"
 lett_b: .ascii "B"
 lett_c: .ascii "C"
+lett_O: .ascii "O"
+
 lett_term: .ascii "\0"
 lett_acapo: .ascii "\n"
 trattino: .ascii "-"
@@ -15,7 +17,11 @@ trattino: .ascii "-"
 A: .long 0
 B: .long 0
 C: .long 0
+MAX_AB: .long 31
+MAX_C: .long 24
 count: .long 0
+
+len_line: .long 17
 
 .section .text # sezione istruzioni
 .global day 
@@ -169,4 +175,222 @@ count: .long 0
         jmp on
 
     normale:
+        xorl %ecx, %ecx
+        normale_wocln:
+        movb (%edx, %esi, 1), %bl
+
+        # check if bl value is \0
+        cmp lett_term, %bl
+        je fine
+
+        # check if bl value is \n
+        cmp lett_acapo, %bl
+        jne continue_n
+        inc %edx
+        jmp normale_wocln
+
+        continue_n:
+        cmp $73, %bl # 73 -> ascii I
+        je in
+        cmp $79, %bl # 79 -> ascii O
+        je out
+        jmp anomalia
+
+    in:
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+        
+        # se bh != O --> è il secondo carattere
+        cmp $0, %bh
+        jne continue_in
+        movb %bl, %bh
+        jmp in
+
+        continue_in:
+        # se bh != 'N' --> anomalia
+        cmp $78, %bh # 78 -> ascii N
+        jne anomalia
+        # se bl != '-' --> anomalia
+        cmp trattino, %bl
+        jne anomalia
+        # addl $2, %edx
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+
+        # find which parking the user want to go
+        cmp lett_a, %bl
+        je in_a
+        cmp lett_a, %bl
+        je in_b
+        cmp lett_a, %bl
+        je in_c
+        jmp anomalia
+
+    in_a:
+        movl MAX_AB, %eax
+        cmp %eax, A
+        jge anomalia
+
+        # increase A
+        movl A, %eax
+        inc %eax
+        movl %eax, A
+        call open_in
+
+        jmp normale_wocln
+
+    in_b:
+        movl MAX_AB, %eax
+        cmp %eax, B
+        jge anomalia
+
+        # increase B
+        movl B, %eax
+        inc %eax
+        movl %eax, B
+        call open_in
+
+        jmp normale_wocln
+
+    in_c:
+        movl MAX_C, %eax
+        cmp %eax, C
+        jge anomalia
+
+        # increase B
+        movl C, %eax
+        inc %eax
+        movl %eax, C
+        call open_in
+
+        jmp normale_wocln
+
+
+    open_in:
+        # insert 'O'
+        movb lett_O, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert 'C'
+        movb lett_c, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        call parking_slots
+        ret
+
+    parking_slots:
+        # A slots
         xorl %eax, %eax
+        movb $10, %bl
+        movb A, %al
+        divb %bl
+        # first number
+        addb $48, %al   # dec -> ascii
+        movb %al, (%ecx,%edi,1)
+        inc %ecx
+        # second number
+        addb $48, %ah   # dec -> ascii
+        movb %ah, (%ecx,%edi,1)
+        inc %ecx
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # B slots
+        xorl %eax, %eax
+        movb $10, %bl
+        movb B, %al
+        divb %bl
+        # first number
+        addb $48, %al   # dec -> ascii
+        movb %al, (%ecx,%edi,1)
+        inc %ecx
+        # second number
+        addb $48, %ah   # dec -> ascii
+        movb %ah, (%ecx,%edi,1)
+        inc %ecx
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # C slots
+        xorl %eax, %eax
+        movb $10, %bl
+        movb C, %al
+        divb %bl
+        # first number
+        addb $48, %al   # dec -> ascii
+        movb %al, (%ecx,%edi,1)
+        inc %ecx
+        # second number
+        addb $48, %ah   # dec -> ascii
+        movb %ah, (%ecx,%edi,1)
+        inc %ecx
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        call parking_status
+        ret
+
+    parking_status:
+        movl MAX_AB, %eax
+        cmp %eax, A
+        jl a_0
+        call set_1
+        jmp status_b
+        a_0:
+        call set_0
+
+        status_b:
+        movl MAX_AB, %eax
+        cmp %eax, B
+        jl b_0
+        call set_1
+        jmp status_b
+        b_0:
+        call set_0
+
+        status_c:
+        movl MAX_C, %eax
+        cmp %eax, C
+        jl c_0
+        call set_1
+        jmp end_pstatus
+        c_0:
+        call set_0
+
+        end_pstatus:
+        movb lett_acapo, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+        ret
+
+    set_0:
+        movb $48, (%ecx,%edi,1) # 48 = 0 ascii
+        inc %ecx
+        ret
+
+    set_1:
+        movb $48, (%ecx,%edi,1) # 48 = 0 ascii
+        inc %ecx
+        ret
+
+    out:
+        xorl %ebx, %ebx
+
+    anomalia:
+        xorl %eax, %eax
+
+    fine:
+        ret

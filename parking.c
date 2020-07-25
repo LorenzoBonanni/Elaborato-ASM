@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 /* Inserite eventuali extern modules qui */
-extern char* day(char* buffin, char* buffout);
+extern char day(char* buffin, char* buffout);
 /* ************************************* */
 
 enum { MAXLINES = 200 };
@@ -59,7 +59,18 @@ int main(int argc, char *argv[]) {
 
     /* ELABORAZIONE in C */
     tic_c = current_timestamp();
-
+    int c = 0;
+    while ( bufferout_asm[c] != '\0') {
+      bufferout_asm[c] = '0';
+      c++;
+    }
+    bufferout_asm[c] = '\0';
+    c = 0;
+    printf("test:\n");
+    while ( bufferout_asm[c] != '\0') {
+      printf( "%c", bufferout_asm[c] );
+      c = c + 1 ;
+    }
     /* è possibile inserire qui il codice per l'elaborazione in C (non richiesto per l'elaborato) */
     /* questo pezzo di codice è solo una base di partenza per fare dei check sui dati */
     /*
@@ -86,7 +97,7 @@ int main(int argc, char *argv[]) {
     Inserite qui il vostro blocco di codice assembly inline o richiamo a funzioni assembly.
     Il blocco di codice prende come input 'bufferin' e deve restituire una variabile stringa 'bufferout_asm' che verrà poi salvata su file. */
 
-    *bufferout_asm = day(bufferin, bufferout_asm);
+    day(bufferin, bufferout_asm);
 
     toc_asm = current_timestamp();
 
