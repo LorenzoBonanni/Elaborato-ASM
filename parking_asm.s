@@ -9,6 +9,8 @@ lett_a: .ascii "A"
 lett_b: .ascii "B"
 lett_c: .ascii "C"
 lett_O: .ascii "O"
+lett_U: .ascii "U"
+lett_T: .ascii "T"
 
 lett_term: .ascii "\0"
 lett_acapo: .ascii "\n"
@@ -20,11 +22,11 @@ C: .long 0
 MAX_AB: .long 31
 MAX_C: .long 24
 count: .long 0
-
-len_line: .long 17
+len_buffin: .long 0
 
 .section .text # sezione istruzioni
 .global day 
+
     add_one:
         addl $1, %edx
         jmp on
@@ -190,6 +192,7 @@ len_line: .long 17
         jmp normale_wocln
 
         continue_n:
+        xorb %bh, %bh
         cmp $73, %bl # 73 -> ascii I
         je in
         cmp $79, %bl # 79 -> ascii O
@@ -213,16 +216,15 @@ len_line: .long 17
         # se bl != '-' --> anomalia
         cmp trattino, %bl
         jne anomalia
-        # addl $2, %edx
         inc %edx
         movb (%edx, %esi, 1), %bl
 
         # find which parking the user want to go
         cmp lett_a, %bl
         je in_a
-        cmp lett_a, %bl
+        cmp lett_b, %bl
         je in_b
-        cmp lett_a, %bl
+        cmp lett_c, %bl
         je in_c
         jmp anomalia
 
@@ -236,7 +238,7 @@ len_line: .long 17
         inc %eax
         movl %eax, A
         call open_in
-
+        
         jmp normale_wocln
 
     in_b:
@@ -263,6 +265,7 @@ len_line: .long 17
         movl %eax, C
         call open_in
 
+
         jmp normale_wocln
 
 
@@ -274,6 +277,25 @@ len_line: .long 17
 
         # insert 'C'
         movb lett_c, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        call parking_slots
+        ret
+
+    open_out:
+        # insert 'C'
+        movb lett_c, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert 'O'
+        movb lett_O, %bl
         movb %bl, (%ecx,%edi,1)
         inc %ecx
 
@@ -357,7 +379,7 @@ len_line: .long 17
         cmp %eax, B
         jl b_0
         call set_1
-        jmp status_b
+        jmp status_c
         b_0:
         call set_0
 
@@ -373,7 +395,9 @@ len_line: .long 17
         end_pstatus:
         movb lett_acapo, %bl
         movb %bl, (%ecx,%edi,1)
+
         inc %ecx
+        addl $2, %edx
         ret
 
     set_0:
@@ -382,15 +406,85 @@ len_line: .long 17
         ret
 
     set_1:
-        movb $48, (%ecx,%edi,1) # 48 = 0 ascii
+        movb $49, (%ecx,%edi,1) # 49 = 1 ascii
         inc %ecx
         ret
 
     out:
-        xorl %ebx, %ebx
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+        
+        cmp lett_U, %bl
+        je out
+        cmp lett_T, %bl
+        jne anomalia
+        
+
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+        # se bl != '-' --> anomalia
+        cmp trattino, %bl
+        jne anomalia
+        inc %edx
+        movb (%edx, %esi, 1), %bl
+
+        # find which parking the user want to go
+        cmp lett_a, %bl
+        je out_a
+        cmp lett_b, %bl
+        je out_b
+        cmp lett_c, %bl
+        je out_c
+        jmp anomalia
+
+    out_a:
+        # decrease A
+        movl A, %eax
+        dec %eax
+        movl %eax, A
+        call open_out
+        
+        jmp normale_wocln
+
+    out_b:
+        # decrease B
+        movl B, %eax
+        dec %eax
+        movl %eax, B
+        call open_out
+        
+        jmp normale_wocln
+
+    out_c:
+        # decrease C
+        movl C, %eax
+        dec %eax
+        movl %eax, C
+        call open_out
+        
+        jmp normale_wocln
 
     anomalia:
-        xorl %eax, %eax
+        # insert 'C'
+        movb lett_c, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert 'C'
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        # insert '-'
+        movb trattino, %bl
+        movb %bl, (%ecx,%edi,1)
+        inc %ecx
+
+        call parking_slots
+        jmp normale_wocln
+
 
     fine:
+        movb lett_term, %bl
+        movb %bl, (%ecx,%edi,1)
+        movl %edi, %eax
         ret
