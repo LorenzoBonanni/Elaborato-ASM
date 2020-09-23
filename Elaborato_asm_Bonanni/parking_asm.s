@@ -26,15 +26,8 @@ count: .long 0
 .global day 
 
     day:
-        pushl %ebp
-        movl %esp, %ebp
-        movl 8(%ebp), %esi
-        movl 12(%ebp), %edi
-
-        pushl %eax
-        pushl %ebx
-        pushl %ecx
-        pushl %edx
+        movl 4(%esp), %esi
+        movl 8(%esp), %edi
         on:
         xorl %eax, %eax
         xorl %ebx, %ebx
@@ -476,19 +469,10 @@ count: .long 0
         inc %ecx
 
         call parking_slots
-        fix_issue:
-        lodsb
-        # check if al value is \n
-        cmp lett_acapo, %al
-        jne fix_issue
-        je normale_wocln
+        jmp normale_wocln
 
 
     fine:
         movb $0, (%ecx,%edi,1)
-        popl %edx
-        popl %ecx
-        popl %ebx
-        popl %eax
-        popl %ebp
+        movl %edi, %eax
         ret

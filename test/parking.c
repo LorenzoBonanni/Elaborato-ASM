@@ -5,7 +5,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/time.h>
-#include <ctype.h>
 
 /* Inserite eventuali extern modules qui */
 extern char day(char* buffin, char* buffout);
@@ -60,7 +59,7 @@ int main(int argc, char *argv[]) {
 
     /* ELABORAZIONE in C */
     tic_c = current_timestamp();
-    i = 0;
+    int c = 0;
     
     /* è possibile inserire qui il codice per l'elaborazione in C (non richiesto per l'elaborato) */
     /* questo pezzo di codice è solo una base di partenza per fare dei check sui dati */
@@ -72,43 +71,6 @@ int main(int argc, char *argv[]) {
       c = c + 1 ;
     }
     */
-    int correct = 0;
-    while ( bufferin[i] != '\0') {
-
-      if (correct == 3) {
-        break;
-      }
-
-      char char1 = bufferin[i];
-      char char2 = bufferin[i+1];
-      char char3 = bufferin[i+2];
-      char char4 = bufferin[i+3];
-      char char5 = bufferin[i+4];
-
-      if (
-        (char1 == 'A' || char1 == 'B' || char1 == 'C') &&
-        (char2 == '-') &&
-        (isdigit(char3) && isdigit(char4) && char5 == '\n')
-        ) {
-          correct++;
-          i+=5;
-          continue;
-      }
-      else if (
-        (char1 == 'A' || char1 == 'B' || char1 == 'C') &&
-        (char2 == '-') &&
-        (isdigit(char3) && char4 == '\n')
-        ) {
-          correct++;
-          i+=4;
-          continue;
-      }
-      else { 
-        printf("Anomalia: Le prime 3righe non sono formattate correttamente");
-        exit(1);
-      }
-      
-    }
 
     toc_c = current_timestamp();
 
